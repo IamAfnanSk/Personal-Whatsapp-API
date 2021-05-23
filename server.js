@@ -12,8 +12,6 @@ const router = new koaRouter();
 const puppet = new Puppet();
 const port = process.env.PORT || 7861;
 
-console.log(process.env.WHATSAPP_TO_NAME);
-
 app.use(cors());
 app.use(router.routes());
 app.use(serve("./public/"));
