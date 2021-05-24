@@ -18,9 +18,10 @@ const port = process.env.PORT || 7861;
 
 app.use(cors());
 app.use(bodyParser());
-app.use(serve("./public/"));
 
 app.use(router.routes());
+
+app.use(serve("./public/"));
 
 app.listen(port, () => {
   console.log(`✨ Server running at http://localhost:${port}`);
