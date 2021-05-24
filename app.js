@@ -41,9 +41,9 @@ export class Puppet {
 
     await this.page.waitForTimeout(3000);
 
-    // setInterval(async () => {
-    //   await this.capture();
-    // }, 15000);
+    setInterval(async () => {
+      await this.capture();
+    }, 3000);
 
     const list = await this.page.waitForSelector(
       `span[title="${process.env.WHATSAPP_TO_NAME}"]`,
