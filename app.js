@@ -17,12 +17,14 @@ export class Puppet {
   }
 
   async capture() {
+    await this.page.waitForTimeout(1000);
     await this.page.screenshot({ path: "./public/scanthis.png" });
   }
 
   async init() {
     const browser = await puppeteer.launch({
       headless: false,
+      args: ["--disable-gpu", "--no-sandbox", "--disable-setuid-sandbox"],
     });
 
     const page = await browser.newPage();
@@ -33,13 +35,15 @@ export class Puppet {
       waitUntil: "networkidle2",
     });
 
+    await this.page.waitForTimeout(2000);
+
     await this.page.waitForSelector(".landing-main .O1rXL", { timeout: 0 });
 
-    await this.page.waitForTimeout(1000);
+    await this.page.waitForTimeout(3000);
 
-    setInterval(async () => {
-      await this.capture();
-    }, 5000);
+    // setInterval(async () => {
+    //   await this.capture();
+    // }, 15000);
 
     const list = await this.page.waitForSelector(
       `span[title="${process.env.WHATSAPP_TO_NAME}"]`,
