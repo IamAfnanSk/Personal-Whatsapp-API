@@ -4,15 +4,17 @@ export class Puppet {
   constructor() {}
 
   #page;
+  #busy = false;
+  #requestList = [];
 
   #startCapture() {
-    setInterval(async () => {
+    setInterval(() => {
       try {
-        await this.#page.screenshot({ path: "./public/scanthis.png" });
+        this.#page.screenshot({ path: "./public/scanthis.png" });
       } catch (error) {
         console.log(error);
       }
-    }, 3000);
+    }, 5000);
   }
 
   #checkForRescanButton() {
@@ -55,17 +57,63 @@ export class Puppet {
     }
   }
 
-  async sendMessage(to, message) {
+  async #checkAndSend() {
+    setInterval(async () => {
+      try {
+        if (this.#busy) {
+          return;
+        }
+
+        const tasks = this.#requestList.filter(
+          (request) => request.status === "requested"
+        );
+
+        if (!tasks.length) {
+          return;
+        }
+
+        const request = tasks[0];
+
+        const { to, message } = request;
+
+        this.#busy = true;
+        request.status = "sending";
+
+        await this.#page.evaluate(() => {
+          window.confirm = () => true;
+          window.onbeforeunload = null;
+        });
+
+        await this.#page.goto(`https://web.whatsapp.com/send?phone=${to}`, {
+          waitUntil: "networkidle2",
+        });
+
+        await this.#waitToLoad();
+
+        await this.#page.keyboard.type(message);
+
+        await this.#page.keyboard.press("Enter");
+
+        await this.#page.evaluate(() => {
+          window.confirm = () => true;
+          window.onbeforeunload = null;
+        });
+
+        request.status = "send";
+        this.#busy = false;
+      } catch (error) {
+        console.log(error);
+      }
+    }, 1000);
+  }
+
+  sendMessage(to, message) {
     try {
-      await this.#page.goto(`https://web.whatsapp.com/send?phone=${to}`, {
-        waitUntil: "networkidle2",
+      this.#requestList.push({
+        to,
+        message,
+        status: "requested",
       });
-
-      await this.#waitToLoad();
-
-      await this.#page.keyboard.type(message);
-
-      await this.#page.keyboard.press("Enter");
 
       return true;
     } catch (error) {
@@ -93,6 +141,8 @@ export class Puppet {
       this.#startCapture();
       this.#checkForRescanButton();
       await this.#waitToLoad();
+
+      this.#checkAndSend();
 
       return true;
     } catch (error) {
