@@ -9,7 +9,7 @@ router.post("/send", async (ctx) => {
     const phoneNumber = ctx.request.body.phoneNumber;
     const message = ctx.request.body.message;
 
-    await puppet.sendMessage(phoneNumber, message);
+    puppet.sendMessage(phoneNumber, message);
 
     ctx.status = 200;
 
