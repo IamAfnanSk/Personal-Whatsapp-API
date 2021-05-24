@@ -1,59 +1,77 @@
 import puppeteer from "puppeteer";
 
 export class Puppet {
-  page;
+  constructor() {}
 
-  async sendMessage(message) {
-    await this.page.keyboard.type(message);
+  #page;
 
-    await this.page.waitForTimeout(3000);
-
-    const submitBtn = await this.page.waitForSelector(
-      "div.EBaI7 button._1E0Oz",
-      { timeout: 0 }
-    );
-
-    submitBtn.click();
+  #startCapture() {
+    setInterval(async () => {
+      await this.#page.screenshot({ path: "./public/scanthis.png" });
+    }, 3000);
   }
 
-  async capture() {
-    // await this.page.waitForTimeout(1000);
-    await this.page.screenshot({ path: "./public/scanthis.png" });
+  #checkForRescanButton() {
+    this.#page.evaluate(() => {
+      const interval = setInterval(() => {
+        const codeCanvas = document.querySelectorAll("canvas");
+
+        if (codeCanvas.length) {
+          const reloadButton =
+            codeCanvas[0].previousElementSibling.previousElementSibling.querySelector(
+              "button"
+            );
+
+          if (reloadButton) {
+            reloadButton.click();
+            console.log("Clicked");
+          }
+        } else {
+          console.log("Canvas not present");
+          clearInterval(interval);
+        }
+      }, 2000);
+    });
+  }
+
+  async #waitToLoad() {
+    await this.#page.waitForSelector(
+      'div.copyable-text.selectable-text[contenteditable="true"]',
+      {
+        timeout: 0,
+      }
+    );
+  }
+
+  async sendMessage(to, message) {
+    await this.#page.goto(`https://web.whatsapp.com/send?phone=${to}`, {
+      waitUntil: "networkidle2",
+    });
+
+    await this.#waitToLoad();
+
+    await this.#page.keyboard.type(message);
+
+    await this.#page.keyboard.press("Enter");
   }
 
   async init() {
     const browser = await puppeteer.launch({
       headless: false,
+      defaultViewport: { height: 600, width: 800 },
       args: ["--disable-gpu", "--no-sandbox", "--disable-setuid-sandbox"],
     });
 
     const page = await browser.newPage();
 
-    this.page = page;
-
-    await this.page.goto("https://web.whatsapp.com", {
+    await page.goto("https://web.whatsapp.com", {
       waitUntil: "networkidle2",
     });
 
-    // await this.page.waitForTimeout(2000);
+    this.#page = page;
 
-    await this.page.waitForSelector(".landing-main .O1rXL", { timeout: 0 });
-
-    // await this.page.waitForTimeout(3000);
-
-    setInterval(async () => {
-      await this.capture();
-    }, 3000);
-
-    const list = await this.page.waitForSelector(
-      `span[title="${process.env.WHATSAPP_TO_NAME}"]`,
-      { timeout: 0 }
-    );
-
-    await this.page.waitForTimeout(1000);
-
-    list.click();
-
-    // await this.page.waitForTimeout(3000);
+    this.#startCapture();
+    this.#checkForRescanButton();
+    await this.#waitToLoad();
   }
 }
