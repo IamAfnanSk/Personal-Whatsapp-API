@@ -17,7 +17,7 @@ export class Puppet {
   }
 
   async capture() {
-    await this.page.waitForTimeout(1000);
+    // await this.page.waitForTimeout(1000);
     await this.page.screenshot({ path: "./public/scanthis.png" });
   }
 
@@ -35,11 +35,11 @@ export class Puppet {
       waitUntil: "networkidle2",
     });
 
-    await this.page.waitForTimeout(2000);
+    // await this.page.waitForTimeout(2000);
 
     await this.page.waitForSelector(".landing-main .O1rXL", { timeout: 0 });
 
-    await this.page.waitForTimeout(3000);
+    // await this.page.waitForTimeout(3000);
 
     setInterval(async () => {
       await this.capture();
@@ -50,10 +50,10 @@ export class Puppet {
       { timeout: 0 }
     );
 
-    await this.page.waitForTimeout(2000);
+    await this.page.waitForTimeout(1000);
 
     list.click();
 
-    await this.page.waitForTimeout(3000);
+    // await this.page.waitForTimeout(3000);
   }
 }
